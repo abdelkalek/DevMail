@@ -1,0 +1,180 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./theme/mailbox.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   Token bridge: shadcn/Tailwind vars -> Mailbox theme vars.
+   The theme vars flip themselves under [data-theme="dark"] on <html>, so a
+   single :root block follows the active theme automatically.
+   --------------------------------------------------------------------------- */
+:root {
+  --radius: 16px;
+  --background: var(--ink-950);
+  --foreground: var(--mist-200);
+  --card: var(--ink-900);
+  --card-foreground: var(--mist-200);
+  --popover: var(--ink-900);
+  --popover-foreground: var(--mist-100);
+  --primary: var(--signal-500);
+  --primary-foreground: #ffffff;
+  --secondary: var(--ink-800);
+  --secondary-foreground: var(--mist-200);
+  --muted: var(--ink-850);
+  --muted-foreground: var(--mist-600);
+  --accent: var(--ink-800);
+  --accent-foreground: var(--mist-100);
+  --destructive: var(--alert);
+  --border: var(--ink-700);
+  --input: var(--ink-600);
+  --ring: var(--signal-500);
+}
+
+@theme inline {
+  --font-sans: var(--font);
+  --font-mono: var(--mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   App overrides on top of the Mailbox template.
+   Unlayered and after the import, so these win over both the template and
+   Tailwind utilities where they overlap.
+   --------------------------------------------------------------------------- */
+
+/* Two-pane mail layout: fill the viewport, panels scroll internally. */
+.app {
+  height: 100vh;
+}
+.shell {
+  min-height: 0;
+}
+.content.content-full {
+  max-width: none;
+  overflow-y: auto;
+}
+
+/* Footer strip inside the list panel (template uses an inline style). */
+.kv-footer {
+  background: color-mix(in srgb, var(--ink-850) 60%, transparent);
+}
+
+/* The row body is a <button> in the React app (an <a> in the template). */
+.row-body {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+/* Radix tabs use data-state instead of the template's .is-on class. */
+.tab[data-state="active"] {
+  background: var(--signal-500);
+  color: #fff;
+  box-shadow: 0 2px 8px -2px rgba(0, 113, 227, 0.55);
+}
+.tab[data-state="active"] .tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* Tabs bar that also hosts non-tab controls (viewport switcher). */
+.tabs-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--ink-700);
+  background: color-mix(in srgb, var(--ink-850) 60%, transparent);
+  padding-right: 12px;
+}
+.tabs.tabs-plain {
+  border-bottom: 0;
+  background: none;
+}
+
+/* Active state for icon buttons (viewport switcher). */
+.btn-icon.is-on {
+  color: var(--signal-500);
+  border-color: color-mix(in srgb, var(--signal-500) 40%, transparent);
+  background: color-mix(in srgb, var(--signal-500) 10%, transparent);
+}
+
+/* Standalone code panes: the template only rounds the bottom corners
+   because <pre class="code"> normally sits under a .code-head. */
+pre.code.code-standalone {
+  border-radius: 12px;
+}
+
+/* Empty-state icon medallion. */
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--signal-500) 12%, transparent);
+  color: var(--signal-500);
+  animation: float-y 4.5s ease-in-out infinite;
+}
+
+/* Keyboard focus rings matching the signal colour. */
+.btn:focus-visible,
+.btn-icon:focus-visible,
+.tab:focus-visible,
+.chip:focus-visible,
+.nav-link:focus-visible,
+.seg button:focus-visible,
+.row-body:focus-visible,
+.star:focus-visible {
+  outline: 2px solid var(--signal-500);
+  outline-offset: 2px;
+}
+
+/* Hide the SMTP pill on very small screens where the topbar gets crowded. */
+@media (max-width: 640px) {
+  .status-pill {
+    display: none;
+  }
+}
