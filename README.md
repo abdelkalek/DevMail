@@ -1,8 +1,6 @@
 # DevMail
 
-A local development mail server in the spirit of [smtp4dev](https://github.com/rnwood/smtp4dev):
-it accepts every email your app sends over SMTP and shows it in a web UI. Nothing is ever delivered.
-
+A local development mail server .
 - **Backend:** Spring Boot 3.5 (Java 21), a small built-in SMTP server, REST API, live updates over SSE
 - **Frontend:** React + Vite + TypeScript + Tailwind v4 + [shadcn/ui](https://ui.shadcn.com)
 - **Single jar:** `mvn package` builds the UI and bundles it into the Spring Boot jar
