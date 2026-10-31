@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Inbox, Mail, Moon, RefreshCw, Search, Sun, Trash2 } from "lucide-react"
 
+import { Dashboard } from "@/components/dashboard"
 import { EmptyInbox } from "@/components/empty-inbox"
 import { MessageList } from "@/components/message-list"
 import { MessageView } from "@/components/message-view"
@@ -18,7 +19,7 @@ import {
 import { Toaster } from "@/components/ui/sonner"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useMailbox } from "@/hooks/use-mailbox"
-import { useSelectedId } from "@/hooks/use-selected-id"
+import { useRoute } from "@/hooks/use-route"
 import { useTheme } from "@/hooks/use-theme"
 import { api } from "@/lib/api"
 import type { ServerInfo } from "@/lib/types"
@@ -34,7 +35,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 
 export default function App() {
   const { theme, setTheme } = useTheme()
-  const [selectedId, select] = useSelectedId()
+  const [route, navigate] = useRoute()
   const [search, setSearch] = useState("")
   const [debounced, setDebounced] = useState("")
   const [filter, setFilter] = useState<Filter>("all")
@@ -80,7 +81,7 @@ export default function App() {
   const clearAll = async () => {
     await api.clear()
     setChecked(new Set())
-    select(null)
+    navigate({ page: "inbox" })
     void refresh()
   }
 
@@ -108,7 +109,7 @@ export default function App() {
     <TooltipProvider>
       <div className="app">
         <aside className="sidebar">
-          <div className="brand">
+          <a className="brand" href="#/">
             <span className="brand-mark">
               <Mail size={19} strokeWidth={1.8} />
             </span>
@@ -116,21 +117,32 @@ export default function App() {
               <span className="brand-name">DevMail</span>
               <span className="brand-sub">Local SMTP capture</span>
             </span>
-          </div>
+          </a>
 
           <nav className="nav" aria-label="Main">
             <p className="nav-label">Mail server</p>
-            <button
-              type="button"
-              className="nav-link is-active"
-              aria-current="page"
-              onClick={() => select(null)}
+            <a
+              className={cn("nav-link", route.page === "dashboard" && "is-active")}
+              href="#/"
+              aria-current={route.page === "dashboard" ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round">
+                <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+                <path d="m13.4 10.6 3.6-3.6" />
+                <path d="M20.5 15.5a9 9 0 1 0-17 0" />
+              </svg>
+              Dashboard <span className="chev">›</span>
+            </a>
+            <a
+              className={cn("nav-link", route.page !== "dashboard" && "is-active")}
+              href="#/inbox"
+              aria-current={route.page !== "dashboard" ? "page" : undefined}
             >
               <Inbox size={17} strokeWidth={1.6} />
               Inbox
               {unread > 0 && <span className="badge-count">{unread}</span>}
               <span className="chev">›</span>
-            </button>
+            </a>
           </nav>
 
           <div className="sidebar-tip">
@@ -144,7 +156,7 @@ export default function App() {
 
         <div className="shell">
           <header className="topbar">
-            <h1>Inbox</h1>
+            <h1>{route.page === "dashboard" ? "Dashboard" : "Inbox"}</h1>
             <div className="topbar-actions">
               <div className="seg" data-theme={theme} role="group" aria-label="Appearance">
                 <span className="seg-thumb" aria-hidden="true" />
@@ -189,16 +201,28 @@ export default function App() {
             </div>
           </header>
 
-          <main className="content content-full min-h-0 flex-1">
-            {selectedId ? (
+          <main className={cn("content", route.page !== "dashboard" && "content-full min-h-0 flex-1")}>
+            {route.page === "message" ? (
               <MessageView
-                key={selectedId}
-                id={selectedId}
-                onBack={() => select(null)}
+                key={route.id}
+                id={route.id}
+                onBack={() => navigate({ page: "inbox" })}
                 onDeleted={() => {
-                  select(null)
+                  navigate({ page: "inbox" })
                   void refresh()
                 }}
+              />
+            ) : route.page === "dashboard" ? (
+              <Dashboard
+                messages={messages}
+                total={data?.total ?? info?.messageCount ?? 0}
+                unread={unread}
+                info={info}
+                connected={connected}
+                smtpHost={smtpHost}
+                smtpPort={smtpPort}
+                onOpenInbox={() => navigate({ page: "inbox" })}
+                onRefresh={() => void refresh()}
               />
             ) : (
               <>
@@ -312,7 +336,7 @@ export default function App() {
                         checked={checked}
                         onToggleCheck={toggleChecked}
                         onMarkRead={(id) => void markRead([id])}
-                        onSelect={select}
+                        onSelect={(id) => navigate({ page: "message", id })}
                         searching={debounced !== "" || filter !== "all"}
                       />
                       <div className="kv kv-footer">
